@@ -181,6 +181,10 @@ dynamic_mode = False
 current_path = []
 current_algorithm = None
 
+#  track nodes_visited and exec_time separately so the main loop can display them
+last_nodes_visited = 0
+last_exec_time = 0.0
+
 def spawn_dynamic_obstacles():
     global current_path
     for r in range(ROWS):
@@ -232,6 +236,10 @@ while running:
                     for c in range(COLS):
                         if grid[r][c] not in (2,3):
                             grid[r][c]=0
+                # reset metrics when grid is cleared
+                current_path = []
+                last_nodes_visited = 0
+                last_exec_time = 0.0
             if event.key==pygame.K_d:
                 dynamic_mode = not dynamic_mode
             if event.key==pygame.K_g:
@@ -239,20 +247,25 @@ while running:
                 start_time=time.time()
                 path,visited=gbfs(start_pos, goal_pos)
                 end_time=time.time()
+                
+                last_nodes_visited = visited
+                last_exec_time = (end_time - start_time) * 1000
                 if path:
                     current_path=path
-                    draw_search([],set(),current_path,visited,(end_time-start_time)*1000)
+                    draw_search([],set(),current_path,visited,last_exec_time)
             if event.key==pygame.K_a:
                 current_algorithm='A*'
                 start_time=time.time()
                 path,visited=astar(start_pos, goal_pos)
                 end_time=time.time()
+                last_nodes_visited = visited
+                last_exec_time = (end_time - start_time) * 1000
                 if path:
                     current_path=path
-                    draw_search([],set(),current_path,visited,(end_time-start_time)*1000)
+                    draw_search([],set(),current_path,visited,last_exec_time)
 
     draw_grid()
-    draw_metrics(len(current_path), len(current_path),0 if not current_path else 0)
+    draw_metrics(len(current_path), last_nodes_visited, last_exec_time)
     pygame.display.update()
     clock.tick(60)
 
